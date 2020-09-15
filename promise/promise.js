@@ -180,7 +180,7 @@ class Promise {
           // promise
           p.then(res => processData(index, res), reject)
         } else {
-          // 非普通值
+          // 非promise
           processData(index, p)
         }
       })
@@ -214,6 +214,50 @@ class Promise {
   // 最终的 这里传的函数无论如何都会执行, 返回一个promise
   // 并且将上次的promise结果传入到下一次
   // 不会使用finally传入的回调函数的值作为结果传入到下次promise, 但是回调函数出错会传入到下次promise
+
+  // 最先的到结果的作为最后的结果
+  static race(promises = []) {
+    return new Promise((resolve, reject) => {
+      promises.forEach(p => {
+        if (p && typeof p.then === "function") {
+          // promise
+          p.then(resolve, reject)
+        } else {
+          // 非promise
+          resolve(p)
+        }
+      })
+    })
+  }
+
+  // 既要成功也要失败传到成功里
+  static allSettled(promises = []) {
+    return new Promise(resolve => {
+      const result = []
+      const length = promises.length
+      let count = 0
+      function processData(index, val) {
+        result[index] = val
+        count++
+        if (length <= count) {
+          resolve(result)
+        }
+      }
+      promises.forEach((p, index) => {
+        if (p && typeof p.then === "function") {
+          // promise
+          p.then(
+            res => processData(index, res),
+            e => processData(index, res)
+          )
+        } else {
+          // 非promise
+          processData(index, p)
+        }
+      })
+    })
+  }
+
   finally(callback) {
     return this.then(
       data => Promise.resolve(callback()).then(() => data),
@@ -224,6 +268,10 @@ class Promise {
     )
   }
 }
+
+// all 全成功才成功
+// race 最先的到结果的作为最后的结果
+// allSettled 既要成功也要失败传到成功里
 
 // 测试时会调用此方法
 // 延迟对象
