@@ -61,6 +61,11 @@ class Promise {
     this.onRejectedCallbacks = [] // 存放失败的回调
     const resolve = val => {
       if (this.status === STATUS.PENDING) {
+        // 方案 2
+        // if (val instanceof Promise) {
+        //   // 是promise 递归解析
+        //   return this.then(resolve, reject)
+        // }
         this.status = STATUS.FULFILLED
         this.value = val
         this.onResolvedCallbacks.forEach(fn => fn())
@@ -139,9 +144,89 @@ class Promise {
     })
     return promise2
   }
+
+  catch(err) {
+    // 是then的简写 默认不传成功回调 只有失败
+    return this.then(null, err)
+  }
+
+  // 如果传入非promise, 直接resolve
+  // 如果传入promise, 等待promise完成
+  static resolve(val) {
+    return new Promise(resolve => {
+      resolve(val)
+    }).then(res => res) // 方案1 使用then
+  }
+  static reject(val) {
+    return new Promise((resolve, reject) => {
+      reject(val)
+    })
+  }
+  // 全部完成才完成  一个失败就失败
+  static all(promises = []) {
+    return new Promise((resolve, reject) => {
+      const result = []
+      const length = promises.length
+      let count = 0
+      function processData(index, val) {
+        result[index] = val
+        count++
+        if (length <= count) {
+          resolve(result)
+        }
+      }
+      promises.forEach((p, index) => {
+        if (p && typeof p.then === "function") {
+          // promise
+          p.then(res => processData(index, res), reject)
+        } else {
+          // 非普通值
+          processData(index, p)
+        }
+      })
+    })
+  }
+  // 使用defer
+  // static all(promises = []) {
+  //   const dfd = Promise.defer()
+  //   const result = []
+  //   const length = promises.length
+  //   let count = 0
+  //   function processData(index, val) {
+  //     result[index] = val
+  //     count++
+  //     if (length <= count) {
+  //       dfd.resolve(result)
+  //     }
+  //   }
+  //   promises.forEach((p, index) => {
+  //     if (p && typeof p.then === "function") {
+  //       p.then(res => {
+  //         processData(index, res)
+  //       }, dfd.reject)
+  //     } else {
+  //       processData(index, p)
+  //     }
+  //   })
+  //   return dfd.promise
+  // }
+
+  // 最终的 这里传的函数无论如何都会执行, 返回一个promise
+  // 并且将上次的promise结果传入到下一次
+  // 不会使用finally传入的回调函数的值作为结果传入到下次promise, 但是回调函数出错会传入到下次promise
+  finally(callback) {
+    return this.then(
+      data => Promise.resolve(callback()).then(() => data),
+      err =>
+        Promise.resolve(callback()).then(() => {
+          throw err
+        })
+    )
+  }
 }
 
 // 测试时会调用此方法
+// 延迟对象
 Promise.defer = Promise.deferred = function() {
   let dfd = {}
   dfd.promise = new Promise((resolve, reject) => {

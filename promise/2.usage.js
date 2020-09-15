@@ -31,3 +31,45 @@ p.then(
   }
 )
 console.log(4)
+
+Promise.resolve(new Promise(resolve => resolve(2))).then(res => {
+  console.log("value", res)
+})
+
+Promise.resolve(222).then(res => {
+  console.log("value", res)
+})
+
+Promise.all([null, 1, new Promise(res => res(222))]).then(console.log)
+
+new Promise(resolve => {
+  resolve("2")
+})
+  .finally(() => {
+    return 22
+  })
+  .then(res => {
+    console.log(res)
+  })
+
+new Promise(resolve => {
+  resolve("2")
+})
+  .finally(() => {})
+  .then(res => {
+    console.log(res)
+  })
+
+new Promise(resolve => {
+  resolve("2")
+})
+  .finally(() => {
+    return new Promise(resolve => {
+      setTimeout(() => {
+        resolve("2222")
+      }, 1000)
+    })
+  })
+  .then(res => {
+    console.log(res)
+  })
