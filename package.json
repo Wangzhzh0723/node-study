@@ -1,0 +1,22 @@
+{
+  "name": "node",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "promises-aplus-tests promise/promise.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Wangzhzh0723/node-study.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Wangzhzh0723/node-study/issues"
+  },
+  "homepage": "https://github.com/Wangzhzh0723/node-study#readme",
+  "devDependencies": {
+    "promises-aplus-tests": "^2.1.2"
+  }
+}
