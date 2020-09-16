@@ -30,3 +30,26 @@ console.log(r.next("name2")) // { value: 2, done: false }
 console.log(r.next(3)) // { value: undefined, done: true }
 
 // async + await === generator + co
+
+function co(it) {
+  return new Promise((resolve, reject) => {
+    function step(data) {
+      let { value, done } = it.next(data)
+      if (!done) {
+        Promise.resolve(value).then(step, reject) // 失败就失败了
+      } else {
+        resolve(value) // 将最终的结果抛出去
+      }
+    }
+    step()
+  })
+}
+
+const fs = require("fs").promises
+function* read2() {
+  let name = yield fs.readFile("name.txt", "utf8")
+  let age = yield fs.readFile(name, "utf8")
+  return age
+}
+
+co(read2()).then(data => console.log(data)) // 18
